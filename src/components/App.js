@@ -27,7 +27,6 @@ class App extends React.Component {
   }
 
   componentDidUpdate() {
-    console.log(JSON.stringify(this.state.order))
     // set the orders in the local storage for persistence
     localStorage.setItem(
       this.props.match.params.storeId,
@@ -60,12 +59,25 @@ class App extends React.Component {
     this.setState({ order });
   }
 
+  deleteOrder = (key) => {
+    const order = { ...this.state.order };
+    delete order[key];
+    this.setState({ order });
+  }
+
   updateFish = (key, updatedFish) => {
     // grab a copy of the fishes
     const fishes = { ...this.state.fishes };
     // update the copy
     fishes[key] = updatedFish;
     // set it to state
+    this.setState({ fishes });
+  }
+
+  deleteFish = (key) => {
+    const fishes = { ...this.state.fishes };
+    // delete fishes[key]; does not sync with firebase. Hence the following workaround
+    fishes[key] = null;
     this.setState({ fishes });
   }
 
@@ -81,8 +93,8 @@ class App extends React.Component {
             }
           </ul>
         </div>
-        <Order fishes={this.state.fishes} order={this.state.order} />
-        <Inventory fishes={this.state.fishes} addfish={this.addfish} updateFish={this.updateFish} loadSampleFishes={this.loadSampleFishes} />
+        <Order fishes={this.state.fishes} deleteOrder={this.deleteOrder} order={this.state.order} />
+        <Inventory fishes={this.state.fishes} addfish={this.addfish} deleteFish={this.deleteFish} updateFish={this.updateFish} loadSampleFishes={this.loadSampleFishes} />
       </div>
     );
   }
