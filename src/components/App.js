@@ -4,11 +4,39 @@ import Order from './Order';
 import Inventory from './Inventory';
 import sampleFishes from '../sample-fishes';
 import Fish from './Fish';
+import base from '../base';
 
 class App extends React.Component {
   state = {
     fishes: {},
     order: {}
+  }
+
+  componentDidMount() {
+    const { params } = this.props.match;
+    // if the localStorage contains data for a store ID, update the state
+    const localStorageRef = localStorage.getItem(this.props.match.params.storeId);
+    if (localStorageRef) {
+      this.setState({ order: JSON.parse(localStorageRef) });
+    }
+    // sync the firebase db with the state
+    this.ref = base.syncState(`${params.storeId}/fishes`, {
+      context: this,
+      state: "fishes",
+    });
+  }
+
+  componentDidUpdate() {
+    console.log(JSON.stringify(this.state.order))
+    // set the orders in the local storage for persistence
+    localStorage.setItem(
+      this.props.match.params.storeId,
+      JSON.stringify(this.state.order)
+    );
+  }
+
+  componentWillUnmount() {
+    base.removeBinding(this.ref);
   }
 
   addfish = (fish) => {
@@ -32,6 +60,15 @@ class App extends React.Component {
     this.setState({ order });
   }
 
+  updateFish = (key, updatedFish) => {
+    // grab a copy of the fishes
+    const fishes = { ...this.state.fishes };
+    // update the copy
+    fishes[key] = updatedFish;
+    // set it to state
+    this.setState({ fishes });
+  }
+
   render() {
     return (
       <div className="catch-of-the-day">
@@ -44,8 +81,8 @@ class App extends React.Component {
             }
           </ul>
         </div>
-        <Order />
-        <Inventory addfish={this.addfish} loadSampleFishes={this.loadSampleFishes} />
+        <Order fishes={this.state.fishes} order={this.state.order} />
+        <Inventory fishes={this.state.fishes} addfish={this.addfish} updateFish={this.updateFish} loadSampleFishes={this.loadSampleFishes} />
       </div>
     );
   }
